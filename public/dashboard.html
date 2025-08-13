@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Cola de Preguntas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preguntas-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .pregunta-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease;
+        }
+
+        .pregunta-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .pregunta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .pregunta-autor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .pregunta-autor img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .pregunta-timestamp {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .pregunta-texto {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .pregunta-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                margin: 1rem auto;
+            }
+            
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Cola de Preguntas para Charla</h1>
+        <div class="user-info">
+            <img id="userAvatar" class="avatar" src="" alt="Avatar">
+            <span id="userName">Cargando...</span>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>➕ Enviar Nueva Pregunta</h2>
+            <form id="preguntaForm">
+                <div class="form-group">
+                    <label for="pregunta">Tu pregunta:</label>
+                    <textarea 
+                        id="pregunta" 
+                        name="pregunta" 
+                        placeholder="Escribe tu pregunta aquí..."
+                        required
+                        maxlength="500"
+                    ></textarea>
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Enviar Pregunta
+                </button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>📋 Cola de Preguntas</h2>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalPreguntas">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="conectados">1</div>
+                    <div class="stat-label">Conectados</div>
+                </div>
+            </div>
+            <div class="preguntas-list" id="preguntasList">
+                <div class="empty-state">
+                    No hay preguntas en la cola. ¡Sé el primero en preguntar!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let currentUser = null;
+        const socket = io();
+
+        // Verificar autenticación y cargar perfil
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/profile', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentUser = await response.json();
+                document.getElementById('userName').textContent = currentUser.user.name;
+                document.getElementById('userAvatar').src = currentUser.user.avatar;
+            } catch (error) {
+                console.error('Error al cargar perfil:', error);
+                window.location.href = '/';
+            }
+        }
+
+        // Cargar preguntas existentes
+        async function loadPreguntas() {
+            try {
+                const response = await fetch('/api/preguntas', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    mostrarPreguntas(data.preguntas);
+                }
+            } catch (error) {
+                console.error('Error al cargar preguntas:', error);
+            }
+        }
+
+        // Mostrar preguntas en la UI
+        function mostrarPreguntas(preguntas) {
+            const lista = document.getElementById('preguntasList');
+            const totalElement = document.getElementById('totalPreguntas');
+            
+            totalElement.textContent = preguntas.length;
+
+            if (preguntas.length === 0) {
+                lista.innerHTML = '<div class="empty-state">No hay preguntas en la cola. ¡Sé el primero en preguntar!</div>';
+                return;
+            }
+
+            lista.innerHTML = preguntas.map(pregunta => `
+                <div class="pregunta-item" data-id="${pregunta.id}">
+                    <div class="pregunta-header">
+                        <div class="pregunta-autor">
+                            <img src="${pregunta.avatar}" alt="${pregunta.nombre}">
+                            ${pregunta.nombre}
+                        </div>
+                        <div class="pregunta-timestamp">
+                            ${new Date(pregunta.timestamp).toLocaleString()}
+                            ${currentUser && currentUser.user.username === pregunta.autor ? 
+                                `<button class="delete-btn" onclick="eliminarPregunta(${pregunta.id})">Eliminar</button>` : 
+                                ''
+                            }
+                        </div>
+                    </div>
+                    <div class="pregunta-texto">${pregunta.pregunta}</div>
+                </div>
+            `).join('');
+        }
+
+        // Enviar nueva pregunta
+        document.getElementById('preguntaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const preguntaInput = document.getElementById('pregunta');
+            const submitBtn = document.getElementById('submitBtn');
+            const pregunta = preguntaInput.value.trim();
+
+            if (!pregunta) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Enviando...';
+
+            try {
+                const response = await fetch('/api/preguntas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ pregunta })
+                });
+
+                if (response.ok) {
+                    preguntaInput.value = '';
+                    showNotification('Pregunta enviada exitosamente!');
+                } else {
+                    const error = await response.json();
+                    showNotification(error.error || 'Error al enviar pregunta', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error de conexión', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Enviar Pregunta';
+            }
+        });
+
+        // Eliminar pregunta
+        async function eliminarPregunta(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) return;
+
+            try {
+                const response = await fetch(`/api/preguntas/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    showNotification('Pregunta eliminada');
+                } else {
+                    showNotification('Error al eliminar pregunta', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error de conexión', 'error');
+            }
+        }
+
+        // Cerrar sesión
+        async function logout() {
+            try {
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                window.location.href = '/';
+            }
+        }
+
+        // Mostrar notificaciones
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type === 'error' ? 'error' : 'success'}`;
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Socket.io eventos
+        socket.on('nueva-pregunta', (pregunta) => {
+            showNotification(`Nueva pregunta de ${pregunta.nombre}`);
+        });
+
+        socket.on('cola-actualizada', (preguntas) => {
+            mostrarPreguntas(preguntas);
+        });
+
+        socket.on('pregunta-eliminada', (data) => {
+            showNotification('Una pregunta fue eliminada');
+        });
+
+        // Inicializar aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+            loadPreguntas();
+        });
+    </script>
+</body>
+</html>
