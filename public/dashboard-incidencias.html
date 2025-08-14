@@ -64,6 +64,72 @@
             background: rgba(255,255,255,0.3);
         }
 
+        .change-role-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .change-role-btn:hover {
+            background: #e67e22;
+            transform: translateY(-1px) rotate(180deg);
+        }
+
+        .role-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .role-badge {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .student-badge {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .supervisor-badge {
+            background: linear-gradient(45deg, #27ae60, #229954);
+        }
+
+        .mini-change-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .mini-change-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -249,6 +315,91 @@
             display: none;
         }
 
+        /* Pantalla de bienvenida */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .welcome-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .welcome-content h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .welcome-content p {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .role-buttons {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .role-button {
+            background: white;
+            border: 3px solid #e9ecef;
+            border-radius: 15px;
+            padding: 2rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .role-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-color: #3498db;
+        }
+
+        .student-btn:hover {
+            border-color: #e74c3c;
+        }
+
+        .supervisor-btn:hover {
+            border-color: #27ae60;
+        }
+
+        .role-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .role-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .role-description {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -275,10 +426,33 @@
             <span id="userName">Cargando...</span>
             <select id="roleSelector" class="role-selector">
                 <option value="">Seleccionar rol...</option>
-                <option value="estudiante">Estudiante</option>
-                <option value="jefe_laboratorio">Jefe de Laboratorio</option>
+                <option value="estudiante">👨‍🎓 Estudiante</option>
+                <option value="jefe_laboratorio">👨‍🔬 Jefe de Laboratorio</option>
             </select>
+            <button onclick="showWelcomeScreen()" class="change-role-btn" title="Cambiar Rol">
+                🔄
+            </button>
             <button onclick="logout()" class="logout-btn">Cerrar sesión</button>
+        </div>
+    </div>
+
+    <!-- Pantalla de bienvenida y selección de rol -->
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-content">
+            <h2>👋 ¡Bienvenido al Sistema de Alertas!</h2>
+            <p>Selecciona tu rol para comenzar:</p>
+            <div class="role-buttons">
+                <button class="role-button student-btn" onclick="selectRole('estudiante')">
+                    <div class="role-icon">👨‍🎓</div>
+                    <div class="role-title">Estudiante</div>
+                    <div class="role-description">Reportar problemas con equipos</div>
+                </button>
+                <button class="role-button supervisor-btn" onclick="selectRole('jefe_laboratorio')">
+                    <div class="role-icon">👨‍🔬</div>
+                    <div class="role-title">Jefe de Laboratorio</div>
+                    <div class="role-description">Monitorear alertas en tiempo real</div>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -299,6 +473,10 @@
 
         <!-- Sección para estudiantes -->
         <div id="studentSection" class="section hidden">
+            <div class="role-indicator">
+                <span class="role-badge student-badge">👨‍🎓 Modo Estudiante</span>
+                <button onclick="showWelcomeScreen()" class="mini-change-btn">Cambiar Rol</button>
+            </div>
             <h2>📝 Reportar Incidencia</h2>
             <p>Reporta problemas con los equipos del laboratorio</p>
             <form class="incident-form" id="incidentForm">
@@ -335,6 +513,10 @@
 
         <!-- Sección para jefe de laboratorio -->
         <div id="supervisorSection" class="section hidden">
+            <div class="role-indicator">
+                <span class="role-badge supervisor-badge">👨‍🔬 Modo Jefe de Laboratorio</span>
+                <button onclick="showWelcomeScreen()" class="mini-change-btn">Cambiar Rol</button>
+            </div>
             <h2>
                 <span class="status-indicator"></span>
                 Alertas de Incidencia
@@ -377,22 +559,53 @@
                     currentUser = data.user;
                     userName.textContent = currentUser.name || currentUser.username;
                     userAvatar.src = currentUser.avatar;
+                    
+                    // Mostrar pantalla de bienvenida al cargar
+                    showWelcomeScreen();
                 } else {
-                    window.location.href = '/';
+                    // No autenticado, redirigir al login
+                    window.location.href = '/?redirect=dashboard-incidencias';
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
-                window.location.href = '/';
+                // Error de conexión, redirigir al login
+                window.location.href = '/?redirect=dashboard-incidencias';
             }
         }
 
-        // Seleccionar rol
-        function selectRole(role) {
-            currentRole = role;
-            roleSelector.value = role;
+        // Mostrar pantalla de bienvenida
+        function showWelcomeScreen() {
+            // Reset del rol actual
+            currentRole = null;
+            document.getElementById('roleSelector').value = '';
             
-            // Ocultar selección de rol
-            roleSelection.classList.add('hidden');
+            // Mostrar pantalla de bienvenida
+            document.getElementById('welcomeScreen').style.display = 'flex';
+            studentSection.classList.add('hidden');
+            supervisorSection.classList.add('hidden');
+            
+            // Limpiar alertas si las había
+            const alertsContainer = document.getElementById('alertsContainer');
+            if (alertsContainer) {
+                alertsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>No hay incidencias reportadas en este momento</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Actualizar interfaz según el rol
+        function updateInterface(role) {
+            currentRole = role;
+            
+            // Validar que currentUser esté disponible
+            if (!currentUser) {
+                console.error('Usuario no disponible para cambio de rol');
+                return;
+            }
+            
+            console.log(`Cambiando a rol: ${role} para usuario:`, currentUser);
             
             // Mostrar sección correspondiente
             if (role === 'estudiante') {
@@ -401,13 +614,20 @@
             } else if (role === 'jefe_laboratorio') {
                 supervisorSection.classList.remove('hidden');
                 studentSection.classList.add('hidden');
+                // Solicitar incidencias existentes después de cambiar rol
+                setTimeout(() => {
+                    socket.emit('solicitar-incidencias');
+                }, 100);
             }
 
-            // Informar al servidor sobre el rol
-            socket.emit('asignar-rol', { user: currentUser, role: role });
-
-            // Cambiar rol en el servidor también
-            changeRole(role);
+            // Informar al servidor sobre el rol - FORZAR el cambio
+            socket.emit('asignar-rol', { 
+                user: currentUser, 
+                role: role,
+                forceUpdate: true // Bandera para forzar actualización
+            });
+            
+            console.log(`Rol actualizado a: ${role}`);
         }
 
         // Cambiar rol en selector
@@ -438,6 +658,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify({ 
                         equipoId, 
                         descripcion: descripcion || `Problema reportado en ${equipoId}` 
@@ -504,6 +725,34 @@
             } catch (error) {
                 console.error('Error changing role:', error);
             }
+        }
+
+        // Seleccionar rol desde la pantalla de bienvenida
+        function selectRole(role) {
+            console.log(`Seleccionando rol: ${role}`);
+            
+            // Validar que el usuario esté cargado
+            if (!currentUser) {
+                console.error('Usuario no disponible, esperando...');
+                setTimeout(() => selectRole(role), 500);
+                return;
+            }
+            
+            // Ocultar pantalla de bienvenida
+            document.getElementById('welcomeScreen').style.display = 'none';
+            
+            // Actualizar selector
+            document.getElementById('roleSelector').value = role;
+            
+            // Cambiar rol en el servidor primero
+            changeRole(role).then(() => {
+                // Luego actualizar la interfaz
+                updateInterface(role);
+            }).catch(error => {
+                console.error('Error al cambiar rol:', error);
+                // Intentar actualizar interfaz de todos modos
+                updateInterface(role);
+            });
         }
 
         // Eventos de Socket.io

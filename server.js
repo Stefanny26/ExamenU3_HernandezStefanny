@@ -56,13 +56,20 @@ const authenticateJWT = (req, res, next) => {
   }
 };
 
-// Rutas de autenticación OAuth con GitHub
-app.get('/auth/github', (req, res) => {
-  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${process.env.BASE_URL}/auth/github/callback&scope=user:email`;
-  res.redirect(githubAuthUrl);
+// Rutas de autenticación OAuth con Google
+app.get('/auth/google', (req, res) => {
+  const scopes = ['profile', 'email'];
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
+    `redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&` +
+    `scope=${scopes.join(' ')}&` +
+    `response_type=code&` +
+    `access_type=offline`;
+  
+  res.redirect(googleAuthUrl);
 });
 
-app.get('/auth/github/callback', async (req, res) => {
+app.get('/api/auth/google/callback', async (req, res) => {
   const { code } = req.query;
   
   if (!code) {
@@ -71,22 +78,20 @@ app.get('/auth/github/callback', async (req, res) => {
 
   try {
     // Intercambiar código por token de acceso
-    const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
-      client_id: process.env.GITHUB_CLIENT_ID,
-      client_secret: process.env.GITHUB_CLIENT_SECRET,
-      code: code
-    }, {
-      headers: {
-        'Accept': 'application/json'
-      }
+    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      code: code,
+      grant_type: 'authorization_code',
+      redirect_uri: process.env.GOOGLE_CALLBACK_URL
     });
 
-    const accessToken = tokenResponse.data.access_token;
+    const { access_token } = tokenResponse.data;
 
     // Obtener información del usuario
-    const userResponse = await axios.get('https://api.github.com/user', {
+    const userResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
-        'Authorization': `token ${accessToken}`
+        'Authorization': `Bearer ${access_token}`
       }
     });
 
@@ -96,9 +101,10 @@ app.get('/auth/github/callback', async (req, res) => {
     const jwtToken = jwt.sign(
       { 
         id: userData.id, 
-        username: userData.login, 
-        name: userData.name || userData.login,
-        avatar: userData.avatar_url 
+        username: userData.email.split('@')[0], 
+        name: userData.name,
+        email: userData.email,
+        avatar: userData.picture 
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
@@ -255,13 +261,38 @@ io.on('connection', (socket) => {
 
   // Manejar asignación de rol
   socket.on('asignar-rol', (data) => {
-    const { user, role } = data;
+    const { user, role, forceUpdate } = data;
+    
+    // Validar que user existe
+    if (!user) {
+      console.log(`Error: Usuario no válido para socket ${socket.id}`);
+      return;
+    }
+    
+    const userName = user.username || user.name || 'Desconocido';
+    const previousRole = connectedUsers.get(socket.id)?.role;
+    
     connectedUsers.set(socket.id, { user, role });
-    console.log(`Usuario ${user.username} conectado como ${role}`);
+    
+    if (previousRole && previousRole !== role) {
+      console.log(`Usuario ${userName} cambió de rol: ${previousRole} → ${role}`);
+    } else {
+      console.log(`Usuario ${userName} conectado como ${role}`);
+    }
     
     // Enviar incidencias existentes si es jefe de laboratorio
     if (role === ROLES.JEFE_LABORATORIO) {
       socket.emit('incidencias-existentes', incidentAlerts);
+      console.log(`Enviando ${incidentAlerts.length} incidencias a ${userName}`);
+    }
+  });
+
+  // Manejar solicitud de incidencias existentes
+  socket.on('solicitar-incidencias', () => {
+    const userData = connectedUsers.get(socket.id);
+    if (userData && userData.role === ROLES.JEFE_LABORATORIO) {
+      socket.emit('incidencias-existentes', incidentAlerts);
+      console.log(`Enviando ${incidentAlerts.length} incidencias existentes a ${userData.user.username}`);
     }
   });
 
