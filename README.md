@@ -1,7 +1,7 @@
 # SISTEMA WEB CON OAUTH 2.0, JWT Y WEBSOCKETS - INFORME DE LABORATORIO
 
 **Implementación de Sistema de Cola de Preguntas y Alertas de Incidencias**  
-**Autor:** Stefanny Hernández  
+**Autores:** Stefanny Hernández & Adriana Gonzalez
 **Fecha:** 13 de agosto de 2025
 
 ---
@@ -379,9 +379,9 @@ Socket.IO Team. (2024). *Socket.IO Documentation - Real-time Applications*. Sock
 
 ---
 
-## 👤 AUTOR
+## 👤 AUTORES
 
-**Stefanny Hernández**  
+**Stefanny Hernández & Adriana Gonzalez**  
 Examen Unidad 3 - Desarrollo Web Avanzado  
 Fecha: 13 de agosto de 2025
 
