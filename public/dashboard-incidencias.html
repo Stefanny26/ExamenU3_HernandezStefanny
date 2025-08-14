@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistema de Alertas de Incidencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .role-selector {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 5px;
+            margin: 0 1rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Estilos para estudiantes */
+        .incident-form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .equipment-select, .description-input {
+            padding: 0.75rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .equipment-select {
+            min-width: 150px;
+        }
+
+        .description-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .report-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .report-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .report-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Estilos para jefe de laboratorio */
+        .alerts-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-left: 4px solid #f39c12;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-item.new {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            border-left-color: #e74c3c;
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+        }
+
+        .alert-meta {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .alert-message {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-description {
+            color: #555;
+            font-style: italic;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            background: #e74c3c;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .role-section {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .role-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .role-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .role-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .role-btn.active {
+            background: #27ae60;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .incident-form {
+                flex-direction: column;
+            }
+
+            .equipment-select, .description-input {
+                min-width: unset;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 Sistema de Alertas de Incidencia</h1>
+        <div class="user-info">
+            <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+            <span id="userName">Cargando...</span>
+            <select id="roleSelector" class="role-selector">
+                <option value="">Seleccionar rol...</option>
+                <option value="estudiante">Estudiante</option>
+                <option value="jefe_laboratorio">Jefe de Laboratorio</option>
+            </select>
+            <button onclick="logout()" class="logout-btn">Cerrar sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sección de selección de rol -->
+        <div id="roleSelection" class="section role-section">
+            <h2>👤 Selecciona tu rol</h2>
+            <p>Selecciona tu rol para acceder a las funcionalidades correspondientes</p>
+            <div class="role-buttons">
+                <button class="role-btn" onclick="selectRole('estudiante')">
+                    🎓 Estudiante
+                </button>
+                <button class="role-btn" onclick="selectRole('jefe_laboratorio')">
+                    👨‍💼 Jefe de Laboratorio
+                </button>
+            </div>
+        </div>
+
+        <!-- Sección para estudiantes -->
+        <div id="studentSection" class="section hidden">
+            <h2>📝 Reportar Incidencia</h2>
+            <p>Reporta problemas con los equipos del laboratorio</p>
+            <form class="incident-form" id="incidentForm">
+                <select id="equipmentSelect" class="equipment-select" required>
+                    <option value="">Seleccionar equipo...</option>
+                    <option value="PC-01">PC-01</option>
+                    <option value="PC-02">PC-02</option>
+                    <option value="PC-03">PC-03</option>
+                    <option value="PC-04">PC-04</option>
+                    <option value="PC-05">PC-05</option>
+                    <option value="PC-06">PC-06</option>
+                    <option value="PC-07">PC-07</option>
+                    <option value="PC-08">PC-08</option>
+                    <option value="PC-09">PC-09</option>
+                    <option value="PC-10">PC-10</option>
+                    <option value="PC-11">PC-11</option>
+                    <option value="PC-12">PC-12</option>
+                    <option value="PROYECTOR-A">Proyector A</option>
+                    <option value="PROYECTOR-B">Proyector B</option>
+                    <option value="IMPRESORA-01">Impresora 01</option>
+                </select>
+                <input 
+                    type="text" 
+                    id="descriptionInput" 
+                    class="description-input" 
+                    placeholder="Descripción del problema (opcional)..."
+                    maxlength="200"
+                >
+                <button type="submit" class="report-btn" id="reportBtn">
+                    🚨 Reportar Problema
+                </button>
+            </form>
+        </div>
+
+        <!-- Sección para jefe de laboratorio -->
+        <div id="supervisorSection" class="section hidden">
+            <h2>
+                <span class="status-indicator"></span>
+                Alertas de Incidencia
+            </h2>
+            <p>Monitoreo en tiempo real de incidencias reportadas</p>
+            <div class="alerts-container" id="alertsContainer">
+                <div class="empty-state">
+                    <p>No hay incidencias reportadas en este momento</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Variables globales
+        const socket = io();
+        let currentUser = null;
+        let currentRole = null;
+
+        // Referencias del DOM
+        const roleSelection = document.getElementById('roleSelection');
+        const studentSection = document.getElementById('studentSection');
+        const supervisorSection = document.getElementById('supervisorSection');
+        const roleSelector = document.getElementById('roleSelector');
+        const incidentForm = document.getElementById('incidentForm');
+        const equipmentSelect = document.getElementById('equipmentSelect');
+        const descriptionInput = document.getElementById('descriptionInput');
+        const reportBtn = document.getElementById('reportBtn');
+        const alertsContainer = document.getElementById('alertsContainer');
+        const userName = document.getElementById('userName');
+        const userAvatar = document.getElementById('userAvatar');
+
+        // Cargar información del usuario
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/profile');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    userName.textContent = currentUser.name || currentUser.username;
+                    userAvatar.src = currentUser.avatar;
+                } else {
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                window.location.href = '/';
+            }
+        }
+
+        // Seleccionar rol
+        function selectRole(role) {
+            currentRole = role;
+            roleSelector.value = role;
+            
+            // Ocultar selección de rol
+            roleSelection.classList.add('hidden');
+            
+            // Mostrar sección correspondiente
+            if (role === 'estudiante') {
+                studentSection.classList.remove('hidden');
+                supervisorSection.classList.add('hidden');
+            } else if (role === 'jefe_laboratorio') {
+                supervisorSection.classList.remove('hidden');
+                studentSection.classList.add('hidden');
+            }
+
+            // Informar al servidor sobre el rol
+            socket.emit('asignar-rol', { user: currentUser, role: role });
+
+            // Cambiar rol en el servidor también
+            changeRole(role);
+        }
+
+        // Cambiar rol en selector
+        roleSelector.addEventListener('change', (e) => {
+            if (e.target.value) {
+                selectRole(e.target.value);
+            }
+        });
+
+        // Reportar incidencia
+        incidentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const equipoId = equipmentSelect.value;
+            const descripcion = descriptionInput.value.trim();
+            
+            if (!equipoId) {
+                alert('Selecciona un equipo');
+                return;
+            }
+
+            reportBtn.disabled = true;
+            reportBtn.textContent = 'Reportando...';
+
+            try {
+                const response = await fetch('/api/reportar-incidencia', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        equipoId, 
+                        descripcion: descripcion || `Problema reportado en ${equipoId}` 
+                    })
+                });
+
+                if (response.ok) {
+                    alert(`Incidencia reportada exitosamente para ${equipoId}`);
+                    equipmentSelect.value = '';
+                    descriptionInput.value = '';
+                } else {
+                    const error = await response.json();
+                    alert('Error al reportar incidencia: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al reportar incidencia');
+            } finally {
+                reportBtn.disabled = false;
+                reportBtn.textContent = '🚨 Reportar Problema';
+            }
+        });
+
+        // Mostrar alerta en la interfaz
+        function displayAlert(incidencia, isNew = false) {
+            const alertElement = document.createElement('div');
+            alertElement.className = `alert-item ${isNew ? 'new' : ''}`;
+            alertElement.innerHTML = `
+                <div class="alert-header">
+                    <img src="${incidencia.avatarReportante}" alt="${incidencia.nombreReportante}" class="alert-avatar">
+                    <div class="alert-meta">
+                        <strong>${incidencia.nombreReportante}</strong> - ${new Date(incidencia.timestamp).toLocaleString()}
+                    </div>
+                </div>
+                <div class="alert-message">🚨 Se ha reportado una incidencia en el equipo ${incidencia.equipoId}</div>
+                <div class="alert-description">${incidencia.descripcion}</div>
+            `;
+            return alertElement;
+        }
+
+        // Actualizar lista de alertas
+        function updateAlertsList(alerts) {
+            if (alerts.length === 0) {
+                alertsContainer.innerHTML = '<div class="empty-state"><p>No hay incidencias reportadas en este momento</p></div>';
+                return;
+            }
+
+            alertsContainer.innerHTML = '';
+            alerts.forEach(alert => {
+                alertsContainer.appendChild(displayAlert(alert));
+            });
+        }
+
+        // Cambiar rol en el servidor
+        async function changeRole(role) {
+            try {
+                await fetch('/api/cambiar-rol', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ rol: role })
+                });
+            } catch (error) {
+                console.error('Error changing role:', error);
+            }
+        }
+
+        // Eventos de Socket.io
+        socket.on('nueva-incidencia', (data) => {
+            console.log('Nueva incidencia recibida:', data);
+            
+            // Mostrar notificación
+            if (Notification.permission === 'granted') {
+                new Notification('Nueva Incidencia', {
+                    body: data.mensaje,
+                    icon: '/favicon.ico'
+                });
+            }
+
+            // Añadir a la lista si está visible
+            if (currentRole === 'jefe_laboratorio') {
+                const emptyState = alertsContainer.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                
+                alertsContainer.insertBefore(displayAlert(data.incidencia, true), alertsContainer.firstChild);
+            }
+        });
+
+        socket.on('incidencias-existentes', (incidencias) => {
+            if (currentRole === 'jefe_laboratorio') {
+                updateAlertsList(incidencias);
+            }
+        });
+
+        // Logout
+        async function logout() {
+            try {
+                await fetch('/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Error during logout:', error);
+            }
+        }
+
+        // Solicitar permisos de notificación
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Inicializar
+        loadUserProfile();
+    </script>
+</body>
+</html>

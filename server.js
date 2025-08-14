@@ -28,6 +28,17 @@ app.use(express.static('public'));
 let preguntasQueue = [];
 let nextQuestionId = 1;
 
+// Sistema de alertas de incidencia
+let incidentAlerts = [];
+let incidentIdCounter = 1;
+
+// Usuarios conectados con roles
+let connectedUsers = new Map(); // socketId -> {user, role}
+const ROLES = {
+  ESTUDIANTE: 'estudiante',
+  JEFE_LABORATORIO: 'jefe_laboratorio'
+};
+
 // Middleware de autenticación JWT
 const authenticateJWT = (req, res, next) => {
   const token = req.cookies.token || req.header('Authorization')?.replace('Bearer ', '');
@@ -164,6 +175,64 @@ app.delete('/api/preguntas/:id', authenticateJWT, (req, res) => {
   res.json({ message: 'Pregunta eliminada', pregunta: preguntaEliminada });
 });
 
+// Rutas para sistema de alertas de incidencia
+app.post('/api/reportar-incidencia', authenticateJWT, (req, res) => {
+  const { equipoId, descripcion } = req.body;
+  
+  if (!equipoId) {
+    return res.status(400).json({ error: 'ID del equipo es requerido' });
+  }
+
+  const nuevaIncidencia = {
+    id: incidentIdCounter++,
+    equipoId: equipoId,
+    descripcion: descripcion || `Incidencia reportada en ${equipoId}`,
+    reportadoPor: req.user.username,
+    nombreReportante: req.user.name,
+    avatarReportante: req.user.avatar,
+    timestamp: new Date().toISOString(),
+    estado: 'pendiente'
+  };
+
+  incidentAlerts.push(nuevaIncidencia);
+
+  // Enviar alerta solo a los jefes de laboratorio conectados
+  connectedUsers.forEach((userData, socketId) => {
+    if (userData.role === ROLES.JEFE_LABORATORIO) {
+      io.to(socketId).emit('nueva-incidencia', {
+        mensaje: `Se ha reportado una incidencia en el equipo ${equipoId}`,
+        incidencia: nuevaIncidencia
+      });
+    }
+  });
+
+  res.json({ 
+    message: 'Incidencia reportada exitosamente', 
+    incidencia: nuevaIncidencia 
+  });
+});
+
+app.get('/api/incidencias', authenticateJWT, (req, res) => {
+  res.json({ incidencias: incidentAlerts });
+});
+
+app.post('/api/cambiar-rol', authenticateJWT, (req, res) => {
+  const { rol } = req.body;
+  
+  if (!Object.values(ROLES).includes(rol)) {
+    return res.status(400).json({ error: 'Rol inválido' });
+  }
+
+  // Actualizar rol en usuarios conectados si el usuario está conectado
+  connectedUsers.forEach((userData, socketId) => {
+    if (userData.user.username === req.user.username) {
+      userData.role = rol;
+    }
+  });
+
+  res.json({ message: `Rol cambiado a ${rol}`, rol });
+});
+
 // Rutas de páginas
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -173,6 +242,10 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
+app.get('/dashboard-incidencias.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard-incidencias.html'));
+});
+
 // Socket.io para tiempo real
 io.on('connection', (socket) => {
   console.log('Usuario conectado:', socket.id);
@@ -180,8 +253,21 @@ io.on('connection', (socket) => {
   // Enviar cola actual al nuevo cliente
   socket.emit('cola-actualizada', preguntasQueue);
 
+  // Manejar asignación de rol
+  socket.on('asignar-rol', (data) => {
+    const { user, role } = data;
+    connectedUsers.set(socket.id, { user, role });
+    console.log(`Usuario ${user.username} conectado como ${role}`);
+    
+    // Enviar incidencias existentes si es jefe de laboratorio
+    if (role === ROLES.JEFE_LABORATORIO) {
+      socket.emit('incidencias-existentes', incidentAlerts);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('Usuario desconectado:', socket.id);
+    connectedUsers.delete(socket.id);
   });
 });
 
